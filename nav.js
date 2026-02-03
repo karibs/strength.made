@@ -21,6 +21,16 @@
         return /\.html($|[?#])/.test(url.pathname);
     };
 
+    const scrollToHash = (hash) => {
+        if (!hash) return false;
+        const id = hash.startsWith('#') ? hash.slice(1) : hash;
+        if (!id) return false;
+        const target = document.getElementById(id);
+        if (!target) return false;
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return true;
+    };
+
     const syncPageStyle = (doc) => {
         const newStyle = doc.getElementById(pageStyleId);
         const currentStyle = document.getElementById(pageStyleId);
@@ -117,7 +127,14 @@
 
     document.addEventListener('click', (event) => {
         const link = event.target.closest('a');
-        if (!link || !shouldHandle(link)) return;
+        if (!link) return;
+        const href = link.getAttribute('href') || '';
+        if (href.startsWith('#')) {
+            event.preventDefault();
+            scrollToHash(href);
+            return;
+        }
+        if (!shouldHandle(link)) return;
         event.preventDefault();
         loadPage(link.href, true);
     });
@@ -125,5 +142,13 @@
     window.addEventListener('popstate', (event) => {
         const url = (event.state && event.state.url) ? event.state.url : location.href;
         loadPage(url, false);
+    });
+
+    window.addEventListener('hashchange', () => {
+        scrollToHash(location.hash);
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        scrollToHash(location.hash);
     });
 })();

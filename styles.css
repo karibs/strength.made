@@ -168,13 +168,40 @@
             line-height: 1.7;
         }
 
-        .form-section {
-            background: white;
-            border-radius: 12px;
-            padding: 2.5rem;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
-            margin-bottom: 2rem;
-        }
+.form-section {
+    background: white;
+    border-radius: 12px;
+    padding: 2.5rem;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+    margin-bottom: 2rem;
+}
+
+/* Bootstrap grid fallback/safety in case external CSS is blocked */
+#content-root .row {
+    display: flex;
+    flex-wrap: wrap;
+    margin-right: -0.75rem;
+    margin-left: -0.75rem;
+}
+
+#content-root [class^="col-"],
+#content-root [class*=" col-"] {
+    padding-right: 0.75rem;
+    padding-left: 0.75rem;
+}
+
+@media (min-width: 768px) {
+    #content-root .col-md-6 {
+        flex: 0 0 auto;
+        width: 50%;
+    }
+}
+
+@media (max-width: 767.98px) {
+    #content-root .col-md-6 {
+        width: 100%;
+    }
+}
 
         .section-title {
             font-family: 'Oswald', sans-serif;
