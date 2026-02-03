@@ -1,0 +1,1020 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>AI 스쿼트 영상 분석기 | StrongPlan</title>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Work+Sans:wght@300;400;500;600&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css?v=2.2">
+    <style id="page-style">
+        body {
+            padding: 0;
+        }
+
+        .main-content {
+            padding: 2rem 0;
+        }
+
+        .analysis-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .page-header {
+            background: linear-gradient(135deg, var(--primary) 0%, #2a2a2a 100%);
+            color: white;
+            padding: 3rem 0;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-header h1 {
+            font-family: 'Oswald', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            letter-spacing: 1px;
+        }
+
+        .page-header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .controls-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            margin-bottom: 2rem;
+        }
+
+        .file-input-wrapper {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .file-label {
+            background: linear-gradient(135deg, var(--secondary) 0%, #ff6666 100%);
+            color: white;
+            padding: 15px 40px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 25px rgba(255, 68, 68, 0.3);
+            font-family: 'Oswald', sans-serif;
+            letter-spacing: 0.5px;
+        }
+
+        .file-label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 35px rgba(255, 68, 68, 0.4);
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        #analyzeBtn {
+            background: var(--accent);
+            color: var(--primary);
+            padding: 15px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(0, 212, 255, 0.25);
+            font-family: 'Oswald', sans-serif;
+            letter-spacing: 0.5px;
+        }
+
+        #analyzeBtn:disabled {
+            background: #ccc;
+            color: #666;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        #analyzeBtn:not(:disabled):hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 212, 255, 0.3);
+            background: #00bbdd;
+        }
+
+        .viewer-section {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .video-container {
+            position: relative;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            flex: 1;
+            min-width: 300px;
+            max-width: 480px;
+        }
+
+        .video-label {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            z-index: 10;
+        }
+
+        #videoElement, #videoClone {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        #canvasElement {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .analysis-panel {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+        }
+
+        .metric-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--accent);
+            transition: all 0.2s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateX(5px);
+        }
+
+        .metric-card.highlight {
+            background: linear-gradient(135deg, var(--primary) 0%, #2a2a2a 100%);
+            color: white;
+            border-left: 4px solid var(--secondary);
+        }
+
+        .metric-title {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .metric-card.highlight .metric-title {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary);
+            font-family: 'Oswald', sans-serif;
+        }
+
+        .metric-card.highlight .metric-value {
+            color: white;
+        }
+
+        .metric-value.good {
+            color: #28a745;
+        }
+
+        .metric-value.warning {
+            color: #ffc107;
+        }
+
+        .metric-value.danger {
+            color: var(--secondary);
+        }
+
+        .feedback-box {
+            background: linear-gradient(135deg, var(--secondary) 0%, #ff6666 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 15px;
+            font-size: 1.1rem;
+            text-align: center;
+            font-weight: 600;
+            box-shadow: 0 6px 25px rgba(255, 68, 68, 0.3);
+        }
+
+        .ad-banner {
+            display: none;
+            background: white;
+            border: 2px solid var(--accent);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+            animation: slideIn 0.5s ease;
+        }
+
+        .ad-banner.show {
+            display: block;
+        }
+
+        .ad-banner h3 {
+            margin-bottom: 10px;
+            color: var(--primary);
+            font-family: 'Oswald', sans-serif;
+        }
+
+        .ad-banner a {
+            color: var(--secondary);
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .ad-banner a:hover {
+            text-decoration: underline;
+        }
+
+        .ad-banner p {
+            color: #666;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .page-header h1 {
+                font-size: 1.8rem;
+            }
+
+            .viewer-section {
+                flex-direction: column;
+            }
+
+            .video-container {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="site-container nav-inner">
+            <a class="navbar-brand" href="/index.html">StrongPlan</a>
+            <div class="nav-links" aria-label="주요 메뉴">
+                <a href="/index.html">Home</a>
+                <a href="/tool/workout-generator.html">Tool</a>
+                <a href="/squat-video-analysis.html">Video Analysis</a>
+                <a href="/about.html">About</a>
+                <a href="/contact.html">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="page-header">
+        <div class="analysis-container">
+            <h1>AI 스쿼트 영상 분석기</h1>
+            <p>동영상을 업로드하면 실시간으로 자세를 분석합니다</p>
+        </div>
+    </header>
+
+    <main class="main-content" id="content-root">
+        <div class="analysis-container">
+            <div class="controls-section">
+                <div class="file-input-wrapper">
+                    <label for="fileInput" class="file-label">
+                        영상 선택하기
+                    </label>
+                    <input type="file" id="fileInput" accept="video/mp4,video/mov,video/avi,video/webm">
+                    <button id="analyzeBtn" disabled>분석 시작</button>
+                </div>
+            </div>
+
+            <div class="viewer-section">
+                <div class="video-container">
+                    <div class="video-label">원본 영상</div>
+                    <video id="videoClone" controls></video>
+                </div>
+
+                <div class="video-container">
+                    <div class="video-label">AI 분석</div>
+                    <video id="videoElement" muted style="opacity: 0.7;"></video>
+                    <canvas id="canvasElement"></canvas>
+                </div>
+
+                <div class="analysis-panel">
+                    <!-- <div class="metric-card" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; border-left: none;">
+                        <div class="metric-title" style="color: white; opacity: 0.9;">Rep 카운트</div>
+                        <div class="metric-value" style="color: white;" id="repCount">0</div>
+                    </div> -->
+
+                    <div class="metric-card highlight">
+                        <div class="metric-title">촬영 각도</div>
+                        <div class="metric-value" id="viewAngle">-</div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-title">깊이 (Hip vs Knee)</div>
+                        <div class="metric-value" id="depthMetric">-</div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-title">무릎 각도</div>
+                        <div class="metric-value" id="kneeAngle">-</div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-title">무릎 전진도</div>
+                        <div class="metric-value" id="kneeAlignment">-</div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-title">상체 기울기</div>
+                        <div class="metric-value" id="torsoAngle">-</div>
+                    </div>
+
+                    <div class="feedback-box" id="feedbackBox">
+                        영상을 업로드하고 분석을 시작하세요
+                    </div>
+
+                    <div class="ad-banner" id="adBanner">
+                        <h3>가동범위가 안 나오나요?</h3>
+                        <p>역도화로 발목 가동성을 개선하세요</p>
+                        <a href="https://www.coupang.com/np/search?q=역도화" target="_blank" rel="noopener noreferrer">
+                            추천 제품 보기
+                        </a>
+                        <p style="font-size: 0.8rem; margin-top: 10px; opacity: 0.8;">
+                            * 이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="site-container footer-inner">
+            <p>© 2026 StrongPlan. 전문가 검증 스트렝스 트레이닝 루틴 생성기</p>
+            <div class="footer-links" aria-label="하단 링크">
+                <a href="/about.html">About</a>
+                <a href="/privacy-policy.html">Privacy Policy</a>
+                <a href="/disclaimer.html">Disclaimer</a>
+                <a href="/contact.html">Contact</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+
+    <script>
+    (function() {
+        // IIFE로 스코프 격리하여 SPA 환경에서 중복 선언 방지
+        const fileInput = document.getElementById('fileInput');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const videoElement = document.getElementById('videoElement');
+        const videoClone = document.getElementById('videoClone');
+        const canvasElement = document.getElementById('canvasElement');
+        const canvasCtx = canvasElement.getContext('2d');
+
+        const kneeAngleEl = document.getElementById('kneeAngle');
+        const depthMetricEl = document.getElementById('depthMetric');
+        const torsoAngleEl = document.getElementById('torsoAngle');
+        const kneeAlignmentEl = document.getElementById('kneeAlignment');
+        const viewAngleEl = document.getElementById('viewAngle');
+        const repCountEl = document.getElementById('repCount');
+        const feedbackBox = document.getElementById('feedbackBox');
+        const adBanner = document.getElementById('adBanner');
+
+        let pose;
+        let isPoseReady = false; // Pose 초기화 완료 플래그
+        let isAnalyzing = false;
+        let poorDepthCounter = 0;
+        let kneeValgusCounter = 0;
+        let frameCount = 0;
+        let detectedView = 'unknown'; // 'side' or 'front'
+        let viewDetectionFrames = []; // 초반 프레임 투표용
+        let viewLocked = false; // 각도 고정 여부
+
+        // Rep 카운팅
+        let repCount = 0;
+        let repData = []; // 각 rep의 데이터 저장
+        let minKneeAngleInRep = 180;
+        let maxDepthInRep = -100;
+        let currentRepStartFrame = 0;
+
+        // 상태 머신
+        let squatPhase = 'standing'; // 'standing', 'descending', 'bottom', 'ascending'
+
+        // MediaPipe Pose 초기화
+        function initPose() {
+            try {
+                if (typeof Pose === 'undefined') {
+                    console.error('MediaPipe Pose library not loaded');
+                    feedbackBox.textContent = 'AI 라이브러리 로딩 중... 잠시만 기다려주세요';
+                    setTimeout(initPose, 500);
+                    return;
+                }
+
+                pose = new Pose({
+                    locateFile: (file) => {
+                        return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
+                    }
+                });
+
+                pose.setOptions({
+                    modelComplexity: 1,
+                    smoothLandmarks: true,
+                    enableSegmentation: false,
+                    smoothSegmentation: false,
+                    minDetectionConfidence: 0.5,
+                    minTrackingConfidence: 0.5
+                });
+
+                pose.onResults(onResults);
+                isPoseReady = true; // 초기화 완료 표시
+                console.log('MediaPipe Pose initialized successfully');
+                feedbackBox.textContent = '영상을 업로드하고 분석을 시작하세요';
+            } catch (error) {
+                console.error('Error initializing Pose:', error);
+                feedbackBox.textContent = 'AI 초기화 오류: ' + error.message;
+            }
+        }
+
+        // 파일 선택 시
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                console.log('File selected:', file.name, file.type, file.size);
+                const url = URL.createObjectURL(file);
+                videoElement.src = url;
+                videoClone.src = url;
+
+                // Pose가 초기화된 경우에만 버튼 활성화
+                if (isPoseReady) {
+                    analyzeBtn.disabled = false;
+                    feedbackBox.textContent = '분석 시작 버튼을 눌러주세요';
+                } else {
+                    analyzeBtn.disabled = true;
+                    feedbackBox.textContent = 'AI 초기화 중... 잠시만 기다려주세요';
+                }
+
+                // 비디오 로딩 상태 확인
+                videoElement.addEventListener('error', (err) => {
+                    console.error('Video loading error:', err);
+                    feedbackBox.textContent = '비디오 로딩 오류. 다른 파일을 시도해주세요.';
+                }, { once: true });
+
+                videoElement.addEventListener('loadeddata', () => {
+                    console.log('Video loaded successfully');
+                }, { once: true });
+            }
+        });
+
+        // 비디오 메타데이터 로드 시 캔버스 크기 조정
+        videoElement.addEventListener('loadedmetadata', () => {
+            canvasElement.width = videoElement.videoWidth;
+            canvasElement.height = videoElement.videoHeight;
+        });
+
+        // 분석 시작 버튼
+        analyzeBtn.addEventListener('click', () => {
+            if (!isAnalyzing) {
+                console.log('Starting analysis...');
+                if (!isPoseReady || !pose) {
+                    feedbackBox.textContent = 'AI 초기화 중입니다. 잠시만 기다려주세요.';
+                    console.error('Pose not initialized yet');
+                    return;
+                }
+                isAnalyzing = true;
+                analyzeBtn.textContent = '분석 중지';
+                videoElement.play();
+                videoClone.play();
+                requestAnimationFrame(analyzeFrame);
+                console.log('Analysis started');
+            } else {
+                console.log('Stopping analysis...');
+                isAnalyzing = false;
+                analyzeBtn.textContent = '분석 재개';
+                videoElement.pause();
+                videoClone.pause();
+            }
+        });
+
+        // 원본 영상 재생 시 분석 영상도 동기화
+        videoClone.addEventListener('play', () => {
+            if (!isAnalyzing) {
+                videoElement.currentTime = videoClone.currentTime;
+                videoElement.play();
+            }
+        });
+
+        videoClone.addEventListener('pause', () => {
+            videoElement.pause();
+        });
+
+        videoClone.addEventListener('seeked', () => {
+            videoElement.currentTime = videoClone.currentTime;
+        });
+
+        // 각도 계산 함수
+        function calculateAngle(a, b, c) {
+            const radians = Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x);
+            let angle = Math.abs(radians * 180.0 / Math.PI);
+            if (angle > 180.0) {
+                angle = 360 - angle;
+            }
+            return angle;
+        }
+
+        // 촬영 각도 자동 감지 (측면 vs 정면) - 초반 60프레임 투표
+        function detectViewAngle(landmarks) {
+            // 이미 고정되었으면 기존 값 반환
+            if (viewLocked) {
+                return detectedView;
+            }
+
+            const leftShoulder = landmarks[11];
+            const rightShoulder = landmarks[12];
+            const leftHip = landmarks[23];
+            const rightHip = landmarks[24];
+            const nose = landmarks[0];
+            const leftEar = landmarks[7];
+            const rightEar = landmarks[8];
+
+            let sideScore = 0;
+            let frontScore = 0;
+
+            // 조건 1: 어깨 너비 vs 깊이
+            const shoulderWidth = Math.abs(leftShoulder.x - rightShoulder.x);
+            const shoulderDepth = Math.abs(leftShoulder.z - rightShoulder.z);
+
+            if (shoulderWidth > shoulderDepth * 2) {
+                frontScore += 2;
+            } else if (shoulderDepth > shoulderWidth * 1.5) {
+                sideScore += 2;
+            }
+
+            // 조건 2: 양쪽 엉덩이 가시성
+            const leftHipVis = leftHip.visibility || 0;
+            const rightHipVis = rightHip.visibility || 0;
+
+            if (leftHipVis > 0.7 && rightHipVis > 0.7) {
+                frontScore += 2;
+            } else if (Math.abs(leftHipVis - rightHipVis) > 0.3) {
+                sideScore += 2;
+            }
+
+            // 조건 3: 코와 귀의 x축 거리
+            const noseToLeftEar = Math.abs(nose.x - leftEar.x);
+            const noseToRightEar = Math.abs(nose.x - rightEar.x);
+            const maxNoseEarDist = Math.max(noseToLeftEar, noseToRightEar);
+
+            if (maxNoseEarDist > 0.1) {
+                sideScore += 2;
+            } else {
+                frontScore += 1;
+            }
+
+            // 조건 4: 어깨 너비 절대값
+            if (shoulderWidth > 0.25) {
+                frontScore += 1;
+            } else if (shoulderWidth < 0.15) {
+                sideScore += 1;
+            }
+
+            const currentView = sideScore > frontScore ? 'side' : 'front';
+
+            // 초반 60프레임 동안 투표 수집
+            if (frameCount <= 60) {
+                viewDetectionFrames.push(currentView);
+            }
+
+            // 60프레임 도달 시 투표로 최종 결정 및 고정
+            if (frameCount === 60 && !viewLocked) {
+                const sideVotes = viewDetectionFrames.filter(v => v === 'side').length;
+                const frontVotes = viewDetectionFrames.filter(v => v === 'front').length;
+                detectedView = sideVotes > frontVotes ? 'side' : 'front';
+                viewLocked = true;
+                console.log(`View locked: ${detectedView} (side: ${sideVotes}, front: ${frontVotes})`);
+            }
+
+            return viewLocked ? detectedView : currentView;
+        }
+
+        // 프레임 분석
+        async function analyzeFrame() {
+            if (!isAnalyzing || videoElement.paused || videoElement.ended) {
+                return;
+            }
+
+            try {
+                if (pose) {
+                    await pose.send({ image: videoElement });
+                } else {
+                    console.warn('Pose not initialized');
+                }
+            } catch (error) {
+                console.error('Error analyzing frame:', error);
+            }
+
+            requestAnimationFrame(analyzeFrame);
+        }
+
+        // 결과 처리
+        function onResults(results) {
+            if (!results.poseLandmarks) {
+                return;
+            }
+
+            frameCount++;
+            const landmarks = results.poseLandmarks;
+
+            // 촬영 각도 자동 감지
+            detectedView = detectViewAngle(landmarks);
+            viewAngleEl.textContent = detectedView === 'side' ? '측면' : '정면';
+            
+            // 캔버스 초기화
+            canvasCtx.save();
+            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+
+            // 스켈레톤 그리기
+            drawConnectors(canvasCtx, landmarks, POSE_CONNECTIONS, {
+                color: '#00FF00',
+                lineWidth: 4
+            });
+            drawLandmarks(canvasCtx, landmarks, {
+                color: '#FF0000',
+                lineWidth: 2,
+                radius: 6
+            });
+
+            if (detectedView === 'side') {
+                analyzeSideView(landmarks);
+            } else {
+                analyzeFrontView(landmarks);
+            }
+
+            canvasCtx.restore();
+        }
+
+        // 스쿼트 Phase 업데이트 및 Rep 카운팅
+        function updateSquatPhase(kneeAngle, depth) {
+            const prevPhase = squatPhase;
+
+            if (kneeAngle > 140) {
+                squatPhase = 'standing';
+                if (prevPhase === 'ascending') {
+                    // Rep 완료
+                    completeRep();
+                }
+            } else if (kneeAngle < 140 && kneeAngle > 100 && squatPhase === 'standing') {
+                squatPhase = 'descending';
+                currentRepStartFrame = frameCount;
+                minKneeAngleInRep = kneeAngle;
+                maxDepthInRep = depth;
+            } else if (kneeAngle <= 100 && (squatPhase === 'descending' || squatPhase === 'bottom')) {
+                squatPhase = 'bottom';
+                minKneeAngleInRep = Math.min(minKneeAngleInRep, kneeAngle);
+                maxDepthInRep = Math.max(maxDepthInRep, depth);
+            } else if (kneeAngle > 100 && kneeAngle < 140 && squatPhase === 'bottom') {
+                squatPhase = 'ascending';
+            }
+        }
+
+        // Rep 완료 처리
+        function completeRep() {
+            repCount++;
+            repCountEl.textContent = repCount;
+
+            repData.push({
+                repNumber: repCount,
+                minKneeAngle: minKneeAngleInRep,
+                maxDepth: maxDepthInRep,
+                frameCount: frameCount - currentRepStartFrame
+            });
+
+            // 깊이 부족 카운터
+            if (maxDepthInRep < 10) {
+                poorDepthCounter++;
+            }
+
+            // 초기화
+            minKneeAngleInRep = 180;
+            maxDepthInRep = -100;
+        }
+
+        // 코칭 피드백 생성 (3단계 템플릿)
+        function generateCoachingFeedback(depth, kneeAngle, torsoAngle, forwardRatio) {
+            let issues = [];
+
+            // 깊이 부족
+            if (depth < 10 && squatPhase === 'bottom') {
+                issues.push({
+                    problem: '깊이 부족',
+                    cause: '고관절 폴가가 충분하지 않거나, 하강 속도가 너무 빠릅니다.',
+                    cue: '발 전체를 바닥에 붙이고, 엉덩이를 아래로 1초 더 가져가세요.',
+                    drill: '3초 하강 템포 스쿼트 2세트'
+                });
+            }
+
+            // 상체 과전경
+            if (torsoAngle > 45) {
+                issues.push({
+                    problem: '상체 과전경',
+                    cause: '브레이싱 약함 또는 고관절/발목 가동성 부족으로 상체가 먼저 숙여질 수 있습니다.',
+                    cue: '갈비뼈를 내리고 배를 단단히 고정한 채, 가슴을 단단히 유지하세요.',
+                    drill: '벽 앞 스쿼트 2세트'
+                });
+            }
+
+            // 무릎 전진도 높음
+            if (forwardRatio > 0.6) {
+                issues.push({
+                    problem: '무릎 전진도 높음',
+                    cause: '발 뒤쪽 지지가 약하거나, 후 하지가 늦게 들어갈 수 있습니다.',
+                    cue: '발바닥 삼각 지지(엄지볼·새끼볼·뒤꿈치)로 바닥을 밀어 보세요.',
+                    drill: '정지 스쿼트(바닥 1초 멈춤) 3회×3세트'
+                });
+            }
+
+            // 좋은 상태
+            if (issues.length === 0) {
+                if (depth > 20 && squatPhase === 'bottom') {
+                    return '<strong>훌륭합니다!</strong> 깊이가 충분하고 자세가 안정적입니다.';
+                } else if (squatPhase === 'standing') {
+                    return '시작 자세';
+                } else if (squatPhase === 'descending') {
+                    return '하강 중...';
+                } else if (squatPhase === 'ascending') {
+                    return '상승 중...';
+                }
+            } else {
+                // 문제가 있을 때 첫 번째 이슈만 표시
+                const issue = issues[0];
+                return `
+                    <strong>${issue.problem}</strong><br>
+                    <small style="opacity: 0.8;">원인: ${issue.cause}</small><br>
+                    <strong style="color: var(--accent);">즉시 큐:</strong> ${issue.cue}<br>
+                    <small>드릴: ${issue.drill}</small>
+                `;
+            }
+        }
+
+        // 측면 분석 (개선)
+        function analyzeSideView(landmarks) {
+            const leftHip = landmarks[23];
+            const leftKnee = landmarks[25];
+            const leftAnkle = landmarks[27];
+            const leftShoulder = landmarks[11];
+
+            // 1. 깊이 판단 (Hip vs Knee) - 개선
+            const hipHeight = leftHip.y;
+            const kneeHeight = leftKnee.y;
+            const depth = (kneeHeight - hipHeight) * canvasElement.height; // 양수면 고관절이 무릎보다 아래
+
+            depthMetricEl.textContent = depth > 0 ? `+${Math.round(depth)}px` : `${Math.round(depth)}px`;
+
+            if (depth > 20) {
+                depthMetricEl.className = 'metric-value good';
+            } else if (depth > 0) {
+                depthMetricEl.className = 'metric-value warning';
+            } else {
+                depthMetricEl.className = 'metric-value danger';
+            }
+
+            // 2. 무릎 각도 (보조 지표)
+            const kneeAngle = calculateAngle(leftHip, leftKnee, leftAnkle);
+            kneeAngleEl.textContent = `${Math.round(kneeAngle)}°`;
+            
+            if (kneeAngle < 90) {
+                kneeAngleEl.className = 'metric-value good';
+            } else if (kneeAngle < 120) {
+                kneeAngleEl.className = 'metric-value warning';
+            } else {
+                kneeAngleEl.className = 'metric-value';
+            }
+
+            // 3. 무릎 전진도 (정규화) - 개선
+            const kneeToAnkleX = Math.abs(leftKnee.x - leftAnkle.x);
+            const shinLength = Math.abs(leftKnee.y - leftAnkle.y);
+            const forwardRatio = kneeToAnkleX / shinLength; // 정규화된 전진도
+
+            let forwardStatus = '';
+            if (forwardRatio < 0.3) {
+                forwardStatus = '낮음';
+                kneeAlignmentEl.className = 'metric-value good';
+            } else if (forwardRatio < 0.6) {
+                forwardStatus = '보통';
+                kneeAlignmentEl.className = 'metric-value warning';
+            } else {
+                forwardStatus = '높음';
+                kneeAlignmentEl.className = 'metric-value danger';
+            }
+            kneeAlignmentEl.textContent = forwardStatus;
+
+            // 4. 상체 기울기 (벡터 기반) - 개선
+            const shoulderToHipVector = {
+                x: leftHip.x - leftShoulder.x,
+                y: leftHip.y - leftShoulder.y
+            };
+            const verticalAngle = Math.atan2(shoulderToHipVector.x, shoulderToHipVector.y) * (180 / Math.PI);
+            const torsoAngle = Math.abs(verticalAngle);
+
+            torsoAngleEl.textContent = `${Math.round(torsoAngle)}°`;
+
+            if (torsoAngle < 25) {
+                torsoAngleEl.className = 'metric-value good';
+            } else if (torsoAngle < 45) {
+                torsoAngleEl.className = 'metric-value warning';
+            } else {
+                torsoAngleEl.className = 'metric-value danger';
+            }
+
+            // Rep 카운팅 및 상태 머신
+            updateSquatPhase(kneeAngle, depth);
+
+            // 코칭 피드백 (3단계 템플릿: 문제 → 원인 → 즉시 큐 → 드릴)
+            let feedback = generateCoachingFeedback(depth, kneeAngle, torsoAngle, forwardRatio);
+            feedbackBox.innerHTML = feedback;
+
+            // 광고 트리거 개선 (코칭 카드 방식)
+            if (frameCount > 100 && poorDepthCounter > 30 && !adBanner.classList.contains('show')) {
+                adBanner.classList.add('show');
+            }
+
+            // 캔버스에 각도 및 깊이 표시
+            canvasCtx.font = '20px Arial';
+            canvasCtx.fillStyle = depth > 0 ? '#00FF00' : '#FF0000';
+            canvasCtx.strokeStyle = '#000000';
+            canvasCtx.lineWidth = 3;
+
+            const kneeX = leftKnee.x * canvasElement.width;
+            const kneeY = leftKnee.y * canvasElement.height;
+
+            canvasCtx.strokeText(`${Math.round(kneeAngle)}°`, kneeX + 20, kneeY);
+            canvasCtx.fillText(`${Math.round(kneeAngle)}°`, kneeX + 20, kneeY);
+
+            // 깊이 표시
+            const hipX = leftHip.x * canvasElement.width;
+            const hipY = leftHip.y * canvasElement.height;
+            canvasCtx.strokeText(`D:${Math.round(depth)}`, hipX - 50, hipY);
+            canvasCtx.fillText(`D:${Math.round(depth)}`, hipX - 50, hipY);
+        }
+
+        // 정면 분석 (개선)
+        function analyzeFrontView(landmarks) {
+            const leftHip = landmarks[23];
+            const rightHip = landmarks[24];
+            const leftKnee = landmarks[25];
+            const rightKnee = landmarks[26];
+            const leftAnkle = landmarks[27];
+            const rightAnkle = landmarks[28];
+            const leftShoulder = landmarks[11];
+            const rightShoulder = landmarks[12];
+
+            // 1. 무릎 모임 (Knee Valgus) - 주요 지표
+            const hipWidth = Math.abs(leftHip.x - rightHip.x);
+            const kneeWidth = Math.abs(leftKnee.x - rightKnee.x);
+            const valgusRatio = kneeWidth / hipWidth;
+
+            depthMetricEl.textContent = `${(valgusRatio * 100).toFixed(0)}%`;
+            if (valgusRatio > 0.9) {
+                depthMetricEl.className = 'metric-value good';
+            } else if (valgusRatio > 0.7) {
+                depthMetricEl.className = 'metric-value warning';
+                kneeValgusCounter++;
+            } else {
+                depthMetricEl.className = 'metric-value danger';
+                kneeValgusCounter++;
+            }
+
+            // 2. 스탠스 너비
+            const stanceWidth = Math.abs(leftAnkle.x - rightAnkle.x) * canvasElement.width;
+            kneeAngleEl.textContent = `${Math.round(stanceWidth)}px`;
+            kneeAngleEl.className = (stanceWidth > 100 && stanceWidth < 250) ? 'metric-value good' : 'metric-value warning';
+
+            // 3. 어깨 수평도
+            const shoulderBalance = Math.abs(leftShoulder.y - rightShoulder.y) * canvasElement.height;
+            torsoAngleEl.textContent = `${Math.round(shoulderBalance)}px`;
+            torsoAngleEl.className = shoulderBalance < 20 ? 'metric-value good' : 'metric-value warning';
+
+            // 4. 무릎 정렬 상태
+            let kneeStatus = valgusRatio > 0.9 ? '좋음' : valgusRatio > 0.7 ? '약간 모임' : '많이 모임';
+            kneeAlignmentEl.textContent = kneeStatus;
+            kneeAlignmentEl.className = valgusRatio > 0.9 ? 'metric-value good' : valgusRatio > 0.7 ? 'metric-value warning' : 'metric-value danger';
+
+            // 피드백
+            let feedback = '';
+            if (valgusRatio < 0.7) {
+                feedback = '<strong>무릎이 너무 안쪽으로 모입니다!</strong><br><small>원인: 외전근 약함 또는 발목 불안정</small><br><strong style="color: var(--accent);">즉시 큐:</strong> 무릎을 바깥쪽으로 밀어주세요<br><small>드릴: 밴드 스쿼트 3세트</small>';
+            } else if (valgusRatio < 0.9) {
+                feedback = '무릎을 바깥쪽으로 밀어주세요';
+            } else {
+                feedback = '무릎 정렬이 좋습니다!';
+            }
+
+            if (shoulderBalance > 30) {
+                feedback += '<br>어깨가 기울어져 있습니다';
+            }
+
+            feedbackBox.innerHTML = feedback;
+
+            // 광고 트리거
+            if (frameCount > 100 && kneeValgusCounter > 30 && !adBanner.classList.contains('show')) {
+                adBanner.classList.add('show');
+            }
+
+            // 캔버스에 무릎 정렬 시각화
+            canvasCtx.font = '20px Arial';
+            canvasCtx.fillStyle = valgusRatio > 0.9 ? '#00FF00' : '#FF0000';
+            canvasCtx.strokeStyle = '#000000';
+            canvasCtx.lineWidth = 3;
+            
+            // 왼쪽 무릎
+            const leftKneeX = leftKnee.x * canvasElement.width;
+            const leftKneeY = leftKnee.y * canvasElement.height;
+            canvasCtx.strokeText(kneeStatus, leftKneeX - 60, leftKneeY - 20);
+            canvasCtx.fillText(kneeStatus, leftKneeX - 60, leftKneeY - 20);
+
+            // 무릎-엉덩이 선 그리기
+            canvasCtx.beginPath();
+            canvasCtx.strokeStyle = valgusRatio > 0.9 ? '#00FF00' : '#FF0000';
+            canvasCtx.lineWidth = 3;
+            canvasCtx.moveTo(leftHip.x * canvasElement.width, leftHip.y * canvasElement.height);
+            canvasCtx.lineTo(leftKneeX, leftKneeY);
+            canvasCtx.moveTo(rightHip.x * canvasElement.width, rightHip.y * canvasElement.height);
+            canvasCtx.lineTo(rightKnee.x * canvasElement.width, rightKnee.y * canvasElement.height);
+            canvasCtx.stroke();
+        }
+
+        // 초기화 함수를 전역에 노출 (SPA 네비게이션 대응)
+        window.initVideoAnalysis = initPose;
+
+        // 초기화 - 문서 로드 완료 여부에 따라 즉시 또는 load 이벤트에서 실행
+        if (document.readyState === 'complete') {
+            console.log('Document already loaded, initializing MediaPipe Pose...');
+            initPose();
+        } else {
+            window.addEventListener('load', () => {
+                console.log('Page loaded, initializing MediaPipe Pose...');
+                initPose();
+            });
+        }
+    })(); // IIFE 종료
+    </script>
+    <script src="/nav.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+
