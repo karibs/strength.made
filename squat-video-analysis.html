@@ -486,11 +486,22 @@
             }
         }
 
+        // 최대 처리 해상도 (메모리 보호)
+        const MAX_WIDTH = 1280;
+        const MAX_HEIGHT = 720;
+
         // 파일 선택 시
         fileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
-                console.log('File selected:', file.name, file.type, file.size);
+                const fileSizeMB = (file.size / 1024 / 1024).toFixed(1);
+                console.log('File selected:', file.name, file.type, fileSizeMB + 'MB');
+
+                // 큰 파일 경고
+                if (file.size > 50 * 1024 * 1024) {
+                    feedbackBox.textContent = `파일 크기가 큽니다 (${fileSizeMB}MB). 로딩에 시간이 걸릴 수 있습니다.`;
+                }
+
                 const url = URL.createObjectURL(file);
                 videoElement.src = url;
                 videoClone.src = url;
@@ -498,7 +509,9 @@
                 // Pose가 초기화된 경우에만 버튼 활성화
                 if (isPoseReady) {
                     analyzeBtn.disabled = false;
-                    feedbackBox.textContent = '분석 시작 버튼을 눌러주세요';
+                    if (file.size <= 50 * 1024 * 1024) {
+                        feedbackBox.textContent = '분석 시작 버튼을 눌러주세요';
+                    }
                 } else {
                     analyzeBtn.disabled = true;
                     feedbackBox.textContent = 'AI 초기화 중... 잠시만 기다려주세요';
@@ -516,10 +529,23 @@
             }
         });
 
-        // 비디오 메타데이터 로드 시 캔버스 크기 조정
+        // 비디오 메타데이터 로드 시 캔버스 크기 조정 (해상도 제한)
         videoElement.addEventListener('loadedmetadata', () => {
-            canvasElement.width = videoElement.videoWidth;
-            canvasElement.height = videoElement.videoHeight;
+            let width = videoElement.videoWidth;
+            let height = videoElement.videoHeight;
+
+            console.log('Original video dimensions:', width, 'x', height);
+
+            // 해상도가 너무 크면 비율 유지하며 축소
+            if (width > MAX_WIDTH || height > MAX_HEIGHT) {
+                const ratio = Math.min(MAX_WIDTH / width, MAX_HEIGHT / height);
+                width = Math.round(width * ratio);
+                height = Math.round(height * ratio);
+                console.log('Scaled canvas dimensions:', width, 'x', height);
+            }
+
+            canvasElement.width = width;
+            canvasElement.height = height;
         });
 
         // 분석 시작 버튼
