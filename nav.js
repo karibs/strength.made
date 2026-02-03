@@ -58,6 +58,20 @@
             return;
         }
 
+        // Swap navbar
+        const newNav = doc.querySelector('.navbar');
+        const currentNav = document.querySelector('.navbar');
+        if (newNav && currentNav) {
+            currentNav.replaceWith(newNav);
+        }
+
+        // Swap footer
+        const newFooter = doc.querySelector('.footer');
+        const currentFooter = document.querySelector('.footer');
+        if (newFooter && currentFooter) {
+            currentFooter.replaceWith(newFooter);
+        }
+
         syncPageStyle(doc);
         currentContent.replaceWith(newContent);
 
