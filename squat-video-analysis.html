@@ -536,6 +536,14 @@
 
             console.log('Original video dimensions:', width, 'x', height);
 
+            // 코덱 미지원 감지 (dimensions 0x0)
+            if (width === 0 || height === 0) {
+                feedbackBox.innerHTML = '<strong>지원되지 않는 영상 형식입니다.</strong><br><small>H.265/HEVC 코덱은 브라우저에서 재생되지 않습니다.<br>HandBrake 등으로 H.264 MP4로 변환 후 다시 시도해주세요.</small>';
+                analyzeBtn.disabled = true;
+                console.error('Unsupported video codec - dimensions are 0x0');
+                return;
+            }
+
             // 해상도가 너무 크면 비율 유지하며 축소
             if (width > MAX_WIDTH || height > MAX_HEIGHT) {
                 const ratio = Math.min(MAX_WIDTH / width, MAX_HEIGHT / height);
