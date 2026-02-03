@@ -58,22 +58,31 @@
             return;
         }
 
-        // Swap navbar
-        const newNav = doc.querySelector('.navbar');
-        const currentNav = document.querySelector('.navbar');
-        if (newNav && currentNav) {
-            currentNav.replaceWith(newNav);
+        // Replace entire body content except scripts
+        const currentBody = document.body;
+        const newBody = doc.body;
+
+        // Keep track of existing scripts to avoid re-adding
+        const existingScripts = new Set(
+            Array.from(currentBody.querySelectorAll('script[src]'))
+                .map(s => s.src)
+        );
+
+        // Clear current body and copy new content
+        while (currentBody.firstChild) {
+            currentBody.removeChild(currentBody.firstChild);
         }
 
-        // Swap footer
-        const newFooter = doc.querySelector('.footer');
-        const currentFooter = document.querySelector('.footer');
-        if (newFooter && currentFooter) {
-            currentFooter.replaceWith(newFooter);
-        }
+        // Copy all children from new body
+        Array.from(newBody.childNodes).forEach(node => {
+            if (node.nodeName === 'SCRIPT') {
+                // Skip scripts, they'll be handled by runScriptsInOrder
+                return;
+            }
+            currentBody.appendChild(node.cloneNode(true));
+        });
 
         syncPageStyle(doc);
-        currentContent.replaceWith(newContent);
 
         if (doc.title) {
             document.title = doc.title;
